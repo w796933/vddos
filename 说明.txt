@@ -1,0 +1,88 @@
+安装前先更新系统时间   执行 time.sh
+yum -y install epel-release 
+yum -y install curl wget gc gcc gcc-c++ pcre-devel zlib-devel make wget openssl-devel libxml2-devel libxslt-devel gd-devel perl-ExtUtils-Embed GeoIP-devel gperftools gperftools-devel libatomic_ops-devel perl-ExtUtils-Embed gcc automake autoconf apr-util-devel gc gcc gcc-c++ pcre-devel zlib-devel make wget openssl openssl-devel libxml2-devel libxslt-devel gd-devel perl-ExtUtils-Embed GeoIP-devel gperftools gperftools-devel libatomic_ops-devel perl-ExtUtils-Embed 
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+setenforce 0 2>/dev/null
+cat /etc/selinux/config
+
+yum -y update
+reboot
+
+
+放行指定ua
+修改waf.conf 配置文件
+
+if ($http_user_agent =~ "YGDHDHDDDD-WEB1") { testcookie off; }
+
+
+即可
+And you have vDDoS-Layer4-Mapping, detect ip with status 444 and block it with CSF.
+改用ipset  屏蔽IP 
+
+
+
+他这个把bad IP 会记录到 var log  vddos    444.log    vDDoS-Layer4-Mapping 就是监控   444.log 来达到屏蔽IP的   
+
+#####################################################################
+
+
+cd /usr/src/
+wget 'https://download.configserver.com/csf.tgz'
+tar -xvf csf.tgz
+cd csf
+sh install.sh
+
+chkconfig --levels 235 csf on
+chkconfig --levels 235 lfd on
+
+
+
+
+
+cd /etc/csf/
+sed -i 's/TESTING = "1"/TESTING = "0"/g' /etc/csf/csf.conf
+
+
+sed -i 's/LF_IPSET = "0"/LF_IPSET = "1"/g' /etc/csf/csf.conf
+
+
+csf -r && csf -q && service lfd restart
+
+
+####################################################################################################################################################################
+
+添加url  目录  白名单 
+
+
+修改配置文件redirect.conf 
+
+添加  
+location ~* "api" {
+       proxy_set_header   Host             $host;
+       proxy_set_header   X-Real-IP        $remote_addr;
+       proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+   proxy_pass      http://46.105.218.143:80;
+}
+
+多个关键字需要匹配 就用 
+location ~* "api|xiang" {
+       proxy_set_header   Host             $host;
+       proxy_set_header   X-Real-IP        $remote_addr;
+       proxy_set_header   X-Forwarded-For  $proxy_add_x_forwarded_for;
+   proxy_pass      http://46.105.218.143:80;
+}
+
+
+
+
+
+
+添加  ua 白名单
+
+修改waf.conf
+if ($http_user_agent ~* "MicroMessenger|PHP|Wget|HTTrack|Nmap|Verifying|PingBack|Pingdom|Joomla|Wordpress")  { testcookie off; }
+
+
+
+
